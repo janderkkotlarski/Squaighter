@@ -7,44 +7,58 @@
 
 class square
 {	
-	const sf::Vector2f m_wind{800.0f, 400.0f};	
-	sf::Vector2f m_posit{0.5f*m_wind};
+	const sf::Vector2f m_windims{800.0f, 400.0f};	
+	sf::Vector2f m_posit{0.5f*m_windims};
 	
 	const float m_divis{10.0f};
 	
-	const float m_side{m_wind.y/m_divis};	
+	const float m_side{m_windims.y/m_divis};	
 	const float m_radius{0.5f*m_side};
+	
+	const sf::Vector2f m_sides{m_side, m_side};
 	
 	const float m_speed_mult{0.001f};
 		
-	const sf::Vector2f m_speed_right{m_speed_mult*m_wind.x, 0.0f};
-	const sf::Vector2f m_speed_left{-m_speed_mult*m_wind.y, 0.0f};
+	const sf::Vector2f m_speed_right{m_speed_mult*m_windims.x, 0.0f};
+	const sf::Vector2f m_speed_left{-m_speed_mult*m_windims.y, 0.0f};
 	
 	const float m_jump_mult{0.001f};
 	
-	const sf::Vector2f m_jump_up{0.0f, -m_speed_mult*m_wind.y};
+	const sf::Vector2f m_jump_up{0.0f, -m_speed_mult*m_windims.y};
 	
 	sf::Vector2f m_speed{0.0f, 0.0f};
 	
 	const float m_accel_mult{0.0001f};
-	const sf::Vector2f m_accel{0.0f, m_accel_mult*m_wind.y};
+	const sf::Vector2f m_accel{0.0f, m_accel_mult*m_windims.y};
 		
 	const sf::Color m_color{255, 255, 255};
 	
 	sf::RectangleShape m_square;
 	
-	
+	void set_square()
+	{
+		m_square.setSize(m_sides);
+		m_square.setPosition(m_posit.x - m_radius, m_posit.y - m_radius);
+		m_square.setFillColor(m_color);
+		
+		std::cout << m_square.getPosition().y << '\n';
+	}
 	
 	public:
 	
-	void show_square(sf::RenderWindow window)
+	void show_square(sf::RenderWindow& window)
 	{
 		window.draw(m_square);		
 	}
 	
-	square()
+	square(const sf::Vector2f& windims)
+		: m_windims(windims), m_posit(0.5f*m_windims), m_side(m_windims.y/m_divis),	
+		  m_radius(0.5f*m_side), m_sides(m_side, m_side),
+		  m_speed_right(m_speed_mult*m_windims.x, 0.0f), m_speed_left(-m_speed_mult*m_windims.y, 0.0f),
+		  m_jump_up(0.0f, -m_speed_mult*m_windims.y), m_accel(0.0f, m_accel_mult*m_windims.y),
+		  m_square()
 	{
-		
+		set_square();
 	}
 	
 	~square()
@@ -57,29 +71,33 @@ class square
 
 class floor
 {
-	const sf::Vector2f m_wind{800.0f, 400.0f};
+	const sf::Vector2f m_windims{800.0f, 400.0f};
 	
 	const float m_divis{10.0f};
-	const float m_side{m_wind.y/m_divis};
+	const float m_side{m_windims.y/m_divis};
 	
-	const sf::Vector2f m_posit{0.0f, m_wind.y - m_side};
-	const sf::Vector2f m_dims{m_wind.x, m_side};
+	const sf::Vector2f m_posit{0.0f, m_windims.y - m_side};
+	const sf::Vector2f m_dims{m_windims.x, m_side};
 	
 	
 };
 
-int window_maker(const sf::Vector2f& window_dims, const std::string& program_name)
+int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 {
 	const sf::Color black{sf::Color(0, 0, 0)};
 	
-	sf::RenderWindow window(sf::VideoMode(window_dims.x, window_dims.y), program_name, sf::Style::Default);
+	square tess(windims);
+	
+	sf::RenderWindow window(sf::VideoMode(windims.x, windims.y), program_name, sf::Style::Default);
 		
 	while (window.isOpen())
 	{
 		sf::Event event;
 		
 		window.clear(black);
-		// windje.draw(sprait);
+		
+		tess.show_square(window);
+		
 		window.display();
 		
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
@@ -107,7 +125,7 @@ int main()
 	
 	std::cout << program_name << '\n';
 	
-	const sf::Vector2f window_dims{800.0f, 400.0f};
+	const sf::Vector2f windims{800.0f, 100.0f};
 	
-	return window_maker(window_dims, program_name);
+	return window_maker(windims, program_name);
 } 
