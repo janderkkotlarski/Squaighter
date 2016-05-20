@@ -31,7 +31,7 @@ class square
 	const float m_accel_mult{0.0001f};
 	const sf::Vector2f m_accel{0.0f, m_accel_mult*m_windims.y};
 		
-	const sf::Color m_color{255, 255, 255};
+	sf::Color m_color{255, 255, 255};
 	
 	sf::RectangleShape m_square;
 	
@@ -40,8 +40,6 @@ class square
 		m_square.setSize(m_sides);
 		m_square.setPosition(m_posit.x - m_radius, m_posit.y - m_radius);
 		m_square.setFillColor(m_color);
-		
-		std::cout << m_square.getPosition().y << '\n';
 	}
 	
 	public:
@@ -51,12 +49,12 @@ class square
 		window.draw(m_square);		
 	}
 	
-	square(const sf::Vector2f& windims)
-		: m_windims(windims), m_posit(0.5f*m_windims), m_side(m_windims.y/m_divis),	
+	square(const sf::Vector2f& windims, const sf::Vector2f& start_rel, const sf::Color& color)
+		: m_windims(windims), m_posit(start_rel.x*m_windims.x, start_rel.y*m_windims.y), m_side(m_windims.y/m_divis),	
 		  m_radius(0.5f*m_side), m_sides(m_side, m_side),
 		  m_speed_right(m_speed_mult*m_windims.x, 0.0f), m_speed_left(-m_speed_mult*m_windims.y, 0.0f),
 		  m_jump_up(0.0f, -m_speed_mult*m_windims.y), m_accel(0.0f, m_accel_mult*m_windims.y),
-		  m_square()
+		  m_color(color), m_square()
 	{
 		set_square();
 	}
@@ -85,8 +83,11 @@ class floor
 int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 {
 	const sf::Color black{sf::Color(0, 0, 0)};
+	const sf::Color light_red{sf::Color(191, 63, 63)};
 	
-	square tess(windims);
+	const sf::Vector2f left_start_rel{0.2f, 0.9f};
+	
+	square tess(windims, left_start_rel, light_red);
 	
 	sf::RenderWindow window(sf::VideoMode(windims.x, windims.y), program_name, sf::Style::Default);
 		
@@ -125,7 +126,7 @@ int main()
 	
 	std::cout << program_name << '\n';
 	
-	const sf::Vector2f windims{800.0f, 100.0f};
+	const sf::Vector2f windims{800.0f, 400.0f};
 	
 	return window_maker(windims, program_name);
 } 
