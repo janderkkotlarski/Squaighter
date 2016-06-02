@@ -59,6 +59,39 @@ class ground
 	
 };
 
+class shot
+{
+	const float m_squide{1.0f};
+	const sf::Vector2f m_posit;
+	
+	const sf::Vector2f m_speed;
+	
+	const float m_side{0.25f*m_squide};
+	const float m_radius{0.5f*m_side};
+	
+	const sf::Color m_color;
+	
+	sf::RectangleShape m_square;
+	
+	public:
+	
+	
+	
+	
+	shot(const float squide, const sf::Vector2f& posit, const sf::Vector2f& speed, const sf::Color& color)
+		: m_squide(squide), m_posit(posit), m_speed(speed), m_side(0.25f*m_squide), m_radius(0.5f*m_side),
+		  m_color(color), m_square()
+		  {
+			  
+		  }
+		  
+	~shot()
+	{
+	}
+	
+	
+};
+
 class square
 {	
 	const sf::Vector2f m_windims{800.0f, 400.0f};
@@ -73,13 +106,13 @@ class square
 	
 	const sf::Vector2f m_sides{m_side, m_side};
 	
-	const float m_speed_mult{0.0025f};
+	const float m_speed_mult{0.0015f};
 		
 	const sf::Vector2f m_speed_right{m_speed_mult*m_windims.x, 0.0f};
 	const sf::Vector2f m_speed_left{-m_speed_mult*m_windims.x, 0.0f};
 	sf::Vector2f m_speed_vert{0.0f, 0.0f};
 	
-	const float m_jump_mult{0.010f};
+	const float m_jump_mult{0.007f};
 	
 	const sf::Vector2f m_jump_up{0.0f, -m_jump_mult*m_windims.y};
 	
@@ -92,7 +125,7 @@ class square
 	
 	sf::Vector2f m_speed{0.0f, 0.0f};
 	
-	const float m_accel_mult{0.00015f};
+	const float m_accel_mult{0.00007f};
 	const sf::Vector2f m_accel{0.0f, m_accel_mult*m_windims.y};
 		
 	sf::Color m_color{255, 255, 255};
@@ -102,6 +135,26 @@ class square
 	float x_pout()
 	{
 		return m_posit.x;
+	}
+	
+	float y_pout()
+	{
+		return m_posit.y;
+	}
+	
+	void x_pin(const float pin)
+	{
+		m_posit.x = pin;
+	}
+	
+	void y_pin(const float pin)
+	{
+		m_posit.y = pin;
+	}
+	
+	void reset_jumps()
+	{
+		m_jumps = m_max_jumps;
 	}
 	
 	void set_wing()
@@ -195,6 +248,12 @@ class square
 	{
 		m_speed_vert += m_accel;		
 		jump_up();
+		
+		if (m_speed_vert.y > -m_jump_up.y)
+		{
+			m_speed_vert.y = -m_jump_up.y;
+		}
+		
 		m_posit += m_speed_vert;
 		vertigo_check(earth);
 	}
@@ -242,6 +301,33 @@ class square
 		}
 	}
 	
+	void collision_check(square& other)
+	{
+		const float delta_x{x_pout() - other.x_pout()};		
+		const float delta_y{y_pout() - other.y_pout()};
+		
+		if ((abs(delta_y) >= abs(delta_x)) && (abs(delta_y) <= m_side))
+		{
+			if (delta_y <= 0)
+			{
+				y_pin(other.y_pout() - m_side);
+				reset_jumps();
+			}
+		}
+		
+		if ((abs(delta_x) > abs(delta_y)) && (abs(delta_x) <= m_side))
+		{
+			if (delta_x <= 0)
+			{
+				const float x_middle{other.x_pout() + 0.5f*delta_x};
+				
+				x_pin(x_middle - m_radius);
+				other.x_pin(x_middle + m_radius);
+			}
+		}
+		
+	}
+	
 	public:
 	
 	void show_square(sf::RenderWindow& window)
@@ -254,7 +340,8 @@ class square
 		move_left();
 		move_right();		
 		gravity(earth);
-		warp(other);	
+		warp(other);
+		collision_check(other);
 		set_square_posit();
 	}
 	
@@ -332,7 +419,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 
 int main()
 {
-	const std::string program_name{"Squaighter V0.2"};
+	const std::string program_name{"Squaighter V0.3"};
 	
 	std::cout << program_name << '\n';
 	
