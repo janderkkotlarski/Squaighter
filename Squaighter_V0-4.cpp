@@ -35,7 +35,7 @@ class ground
 	
 	public:
 	
-	void show_rect(sf::RenderWindow& window)
+	void displaying(sf::RenderWindow& window)
 	{
 		window.draw(m_rect);
 	}
@@ -70,6 +70,8 @@ class shot
 	const sf::Vector2f m_sides {m_side, m_side};
 	const float m_radius{0.5f*m_side};
 	
+	
+	const sf::Color m_dark{63, 63, 63};
 	const sf::Color m_color;
 	
 	sf::RectangleShape m_square;
@@ -88,14 +90,14 @@ class shot
 	
 	public:
 	
-	void show_shot(sf::RenderWindow& window)
+	void displaying(sf::RenderWindow& window)
 	{
 		window.draw(m_square);
 	}
 	
 	shot(const float squide, const sf::Vector2f& posit, const sf::Vector2f& speed, const sf::Color& color)
 		: m_squide(squide), m_posit(posit), m_speed(speed), m_side(0.25f*m_squide), m_sides(m_side, m_side),
-		  m_radius(0.5f*m_side), m_color(color), m_square()
+		  m_radius(0.5f*m_side), m_color(color + m_dark), m_square()
 		  {
 			  set_square();
 		  }
@@ -146,6 +148,10 @@ class square
 	sf::Color m_color{255, 255, 255};
 	
 	sf::RectangleShape m_square;
+	
+	std::vector <shot> m_shots;
+	
+	bool dressing{false};
 	
 	float x_pout()
 	{
@@ -343,14 +349,23 @@ class square
 		
 	}
 	
-	public:
-	
-	void show_square(sf::RenderWindow& window)
+	void display_square(sf::RenderWindow& window)
 	{
 		window.draw(m_square);
 	}
 	
-	void movement(ground& earth, square& other)
+	void display_shots(sf::RenderWindow& window)
+	{
+		int count = 0;
+		
+		while (count < static_cast<int>(m_shots.size()))
+		{
+			m_shots[count].displaying(window);
+			++count;
+		}
+	}
+	
+	void moving(ground& earth, square& other)
 	{
 		move_left();
 		move_right();		
@@ -359,6 +374,26 @@ class square
 		collision_check(other);
 		set_square_posit();
 	}
+	
+	void shooting()
+	{
+		if ((sf::Keyboard::isKeyPressed(sf::Keyboard::R) && (show_wing() == wing::left)) ||
+			(sf::Keyboard::isKeyPressed(sf::Keyboard::P) && (show_wing() == wing::right)))
+		{
+			if (!dressing)
+			{
+				const shot fired{show_side(), show_posit(), sf::Vector2f(0.0f, 0.0f), show_color()};	
+				m_shots.push_back(fired);
+				dressing = true;
+			}
+		}
+		else if (dressing)
+		{
+			dressing = false;
+		}
+	}
+	
+	public:
 	
 	float show_side()
 	{
@@ -380,12 +415,29 @@ class square
 		return m_winger;
 	}
 	
+	std::vector <shot> show_shots()
+	{
+		return m_shots;
+	}
+		
+	void displaying(sf::RenderWindow& window)
+	{
+		display_square(window);
+		display_shots(window);	
+	}
+	
+	void acting(ground& earth, square& other)
+	{
+		moving(earth, other);
+		shooting();
+	}
+	
 	square(const sf::Vector2f& windims, const wing& winger, const sf::Color& color)
 		: m_windims(windims), m_winger(winger), m_side(m_windims.y/m_divis),	
 		  m_radius(0.5f*m_side), m_sides(m_side, m_side),
 		  m_speed_right(m_speed_mult*m_windims.x, 0.0f), m_speed_left(-m_speed_mult*m_windims.x, 0.0f),
 		  m_jump_up(0.0f, -m_jump_mult*m_windims.y), m_accel(0.0f, m_accel_mult*m_windims.y),
-		  m_color(color), m_square()
+		  m_color(color), m_square(), m_shots()
 	{
 		set_wing();
 		set_square();
@@ -399,16 +451,7 @@ class square
 	
 };
 
-void show_shots(sf::RenderWindow& window, std::vector <shot>& shots)
-{
-	int count = 0;
-	
-	while (count < static_cast<int>(shots.size()))
-	{
-		shots[count].show_shot(window);
-		++count;
-	}
-}
+
 
 void square_shotter(square& lighter, std::vector <shot>& shots)
 {
@@ -443,19 +486,14 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 		
 		window.clear(black);
 		
-		earth.show_rect(window);
-		lefter.show_square(window);
-		righter.show_square(window);
+		earth.displaying(window);
+		lefter.displaying(window);
+		righter.displaying(window);
 		
-		show_shots(window, shots);
-				
 		window.display();
 		
-		lefter.movement(earth, righter);
-		
-		righter.movement(earth, lefter);
-		
-		square_shotter(lefter, shots);
+		lefter.acting(earth, righter);
+		righter.acting(earth, lefter);
 		
 		if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
 		{
