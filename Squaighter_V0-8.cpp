@@ -468,7 +468,7 @@ class square
 			{
 				std::vector <shot> t_shots;
 				
-				int count_2{count};
+				int count_2{0};
 				
 				while (count_2 < size)
 				{
@@ -484,12 +484,12 @@ class square
 					++count_2;
 				}				
 																
-				while (static_cast<int>(m_shots.size()) > count)
+				while (static_cast<int>(m_shots.size()) > 0)
 				{
 					m_shots.pop_back();					
 				}				
 								
-				count_2 = count;
+				count_2 = 0;
 				
 				while (count_2 < size - 1)
 				{
