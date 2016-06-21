@@ -182,6 +182,11 @@ class square
 	
 	bool dressing{false};
 	
+	float r_pout()
+	{
+		return m_radius;
+	}
+	
 	float x_pout()
 	{
 		return m_posit.x;
@@ -351,7 +356,7 @@ class square
 		}
 	}
 	
-	void collision_check(square& another)
+	void collision_square(square& another)
 	{
 		const float delta_x{x_pout() - another.x_pout()};		
 		const float delta_y{y_pout() - another.y_pout()};
@@ -378,6 +383,42 @@ class square
 		
 	}
 	
+	bool collision_shot(shot& own)
+	{
+		const float delta_x{x_pout() - own.x_pout()};		
+		const float delta_y{y_pout() - own.y_pout()};
+		
+		const float distance{r_pout() + own.r_pout()};
+			
+		bool collision{false};
+		
+		if (((abs(delta_y) >= abs(delta_x)) && (abs(delta_y) <= distance)) ||
+			((abs(delta_x) > abs(delta_y)) && (abs(delta_x) <= distance)))
+		{
+			collision = true;
+		}
+		
+		return collision;		
+	}
+	
+	bool collision_square_shot(square& another, shot& own)
+	{
+		const float delta_x{another.x_pout() - own.x_pout()};		
+		const float delta_y{another.y_pout() - own.y_pout()};
+		
+		const float distance{another.r_pout() + own.r_pout()};
+			
+		bool collision{false};
+		
+		if (((abs(delta_y) >= abs(delta_x)) && (abs(delta_y) <= distance)) ||
+			((abs(delta_x) > abs(delta_y)) && (abs(delta_x) <= distance)))
+		{
+			collision = true;
+		}
+		
+		return collision;		
+	}
+	
 	void move_shots()
 	{
 		const int shot_number{static_cast<int>(m_shots.size())};
@@ -397,7 +438,7 @@ class square
 		move_right();		
 		gravity(earth);
 		warp(another);
-		collision_check(another);
+		collision_square(another);
 		set_square_posit();
 		move_shots();
 	}
@@ -464,7 +505,8 @@ class square
 		while (count < size)
 		{
 			if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.15f*m_windims.x) ||
-				(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x))
+				(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x) ||
+				collision_shot(m_shots[count]) || collision_square_shot(another, m_shots[count]))
 			{
 				std::vector <shot> t_shots;
 				
