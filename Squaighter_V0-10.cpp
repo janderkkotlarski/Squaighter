@@ -5,6 +5,11 @@
 
 #include <SFML/Graphics.hpp>
 
+float abs_delta(const float first, const float second)
+{
+	return std::abs(first - second);
+}
+
 enum class wing {left, right};
 
 class ground
@@ -167,6 +172,12 @@ class square
 	const sf::Vector2f m_accel{0.0f, m_accel_mult*m_windims.y};
 		
 	sf::Color m_color{255, 255, 255};
+	
+	const sf::Color m_shocked{191, 191, 191};
+	
+	const int m_shock_time{30};
+	
+	int m_shocks{0};
 	
 	sf::RectangleShape m_square;
 	
@@ -379,18 +390,41 @@ class square
 		
 	}
 	
+	void shocking()
+	{	
+		if (m_shocks == 0)
+		{
+			m_shocks = m_shock_time;			
+			m_square.setFillColor(m_shocked);
+		}
+	}
+	
+	void deshocking()
+	{
+		if (m_shocks > 0)
+		{
+			--m_shocks;
+			
+			if (m_shocks == 0)
+			{
+				m_square.setFillColor(m_color);
+			}
+		}
+	}
+	
 	bool collision_shot(shot& own)
 	{
-		const float delta_x{x_pout() - own.x_pout()};		
-		const float delta_y{y_pout() - own.y_pout()};
+		const float delta_x{abs_delta(x_pout(), own.x_pout())};		
+		const float delta_y{abs_delta(y_pout(), own.y_pout())};
 		
 		const float distance{r_pout() + own.r_pout()};
 			
 		bool collision{false};
 		
-		if (((abs(delta_y) >= abs(delta_x)) && (abs(delta_y) <= distance)) ||
-			((abs(delta_x) > abs(delta_y)) && (abs(delta_x) <= distance)))
+		if (((delta_y >= delta_x) && (delta_y <= distance)) ||
+			((delta_x > delta_y) && (delta_x <= distance)))
 		{
+			shocking();
 			collision = true;
 		}
 		
@@ -399,16 +433,17 @@ class square
 	
 	bool collision_square_shot(square& another, shot& own)
 	{
-		const float delta_x{another.x_pout() - own.x_pout()};		
-		const float delta_y{another.y_pout() - own.y_pout()};
+		const float delta_x{abs_delta(another.x_pout(), own.x_pout())};		
+		const float delta_y{abs_delta(another.y_pout(), own.y_pout())};
 		
 		const float distance{another.r_pout() + own.r_pout()};
 			
 		bool collision{false};
 		
-		if (((abs(delta_y) >= abs(delta_x)) && (abs(delta_y) <= distance)) ||
-			((abs(delta_x) > abs(delta_y)) && (abs(delta_x) <= distance)))
+		if (((delta_y >= delta_x) && (delta_y <= distance)) ||
+			((delta_x > delta_y) && (delta_x <= distance)))
 		{
+			another.spooked();
 			collision = true;
 		}
 		
@@ -437,6 +472,7 @@ class square
 		collision_square(another);
 		set_square_posit();
 		move_shots();
+		deshocking();
 	}
 	
 	void display_square(sf::RenderWindow& window)
@@ -492,6 +528,19 @@ class square
 		}
 	}
 	
+	bool shot_walled(const int count)
+	{
+		bool walled{false};
+		
+		if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.15f*m_windims.x) ||
+			(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x))
+		{
+			walled = true;
+		}
+		
+		return walled;
+	}
+	
 	void shot_expire(square& another)
 	{
 		int count = 0;
@@ -500,9 +549,11 @@ class square
 		
 		while (count < size)
 		{
-			if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.15f*m_windims.x) ||
-				(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x) ||
-				collision_shot(m_shots[count]) || collision_square_shot(another, m_shots[count]))
+			
+			
+			if (shot_walled(count) ||
+				collision_shot(m_shots[count]) ||
+				collision_square_shot(another, m_shots[count]))
 			{
 				std::vector <shot> t_shots;
 				
@@ -567,6 +618,11 @@ class square
 	{
 		return m_shots;
 	}
+	
+	void spooked()
+	{
+		shocking();
+	}
 		
 	void displaying(sf::RenderWindow& window)
 	{
@@ -606,7 +662,8 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	
 	const sf::Color black{sf::Color(0, 0, 0)};
 	const sf::Color light_red{sf::Color(191, 63, 63)};
-	const sf::Color light_green{sf::Color(63, 191, 63)};	const sf::Color light_blue{sf::Color(63, 63, 191)};
+	const sf::Color light_green{sf::Color(63, 191, 63)};
+	const sf::Color light_blue{sf::Color(63, 63, 191)};
 	
 	const float divis{10.0f};
 	

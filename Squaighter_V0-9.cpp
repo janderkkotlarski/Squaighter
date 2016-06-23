@@ -168,6 +168,12 @@ class square
 		
 	sf::Color m_color{255, 255, 255};
 	
+	const sf::Color m_shock{191, 191, 191};
+	
+	const int m_shock_time{10};
+	
+	int m_shocks{0};
+	
 	sf::RectangleShape m_square;
 	
 	const float m_shot_speed_mult{0.007f};
@@ -492,6 +498,19 @@ class square
 		}
 	}
 	
+	bool shot_walled(const int count)
+	{
+		bool walled{false};
+		
+		if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.15f*m_windims.x) ||
+			(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x))
+		{
+			walled = true;
+		}
+		
+		return walled;
+	}
+	
 	void shot_expire(square& another)
 	{
 		int count = 0;
@@ -500,9 +519,11 @@ class square
 		
 		while (count < size)
 		{
-			if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.15f*m_windims.x) ||
-				(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x) ||
-				collision_shot(m_shots[count]) || collision_square_shot(another, m_shots[count]))
+			
+			
+			if (shot_walled(count) ||
+				collision_shot(m_shots[count]) ||
+				collision_square_shot(another, m_shots[count]))
 			{
 				std::vector <shot> t_shots;
 				
@@ -606,7 +627,8 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	
 	const sf::Color black{sf::Color(0, 0, 0)};
 	const sf::Color light_red{sf::Color(191, 63, 63)};
-	const sf::Color light_green{sf::Color(63, 191, 63)};	const sf::Color light_blue{sf::Color(63, 63, 191)};
+	const sf::Color light_green{sf::Color(63, 191, 63)};
+	const sf::Color light_blue{sf::Color(63, 63, 191)};
 	
 	const float divis{10.0f};
 	
