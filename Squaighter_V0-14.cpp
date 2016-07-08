@@ -833,11 +833,12 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	const sf::Color light_blue{sf::Color(63, 63, 191)};
 	const sf::Color light_orange{sf::Color(191, 127, 63)};
 	
-	const std::string filename{"194889.jpg"};
+	const std::string space_name{"Key_Space.png"};
+	const sf::Vector2f space_posit{
 	
 	const float divis{10.0f};
 	
-	const float h_factor{1.3f};
+	const float h_factor{1.4f};
 	
 	sf::RenderWindow window(sf::VideoMode(windims.x, h_factor*windims.y), program_name, sf::Style::Default);
 			
@@ -849,7 +850,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 		square righter(windims, wing::right, light_blue);
 		ground earth(windims, divis, light_green);
 		
-		botan button(0.8f*windims, filename, light_orange, windims, 0.2f*divis);
+		botan button(0.8f*windims, space_name, light_orange, windims, divis);
 		
 		sf::Clock clock;
 		sf::Time time;
