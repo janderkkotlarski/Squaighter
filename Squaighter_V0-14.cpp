@@ -12,6 +12,86 @@ float abs_delta(const float first, const float second)
 
 enum class wing {left, right};
 
+class botan
+{
+	const sf::Vector2f m_posit;
+	const std::string m_filename;
+	
+	const sf::Color m_color;	
+	const sf::Color m_dark{63, 63, 63};
+	
+	const sf::Vector2f m_windims;
+	const float m_divis;
+	
+	float m_mult{1.0f};;
+	
+	sf::Texture m_tex;
+	sf::Sprite m_sprite;
+	
+	sf::Vector2f m_sizes{0.0f, 0.0f};
+	
+	void load_tex()
+	{
+		if (!m_tex.loadFromFile(m_filename))
+		{				
+			std::cout << m_filename << " not found!\n";
+		}
+	}
+	
+	void set_tex()
+	{
+		m_sprite.setTexture(m_tex);
+	}
+	
+	void set_color()
+	{
+		m_sprite.setColor(m_color);
+	}
+		
+	void sprite_sizes()
+	{
+		const sf::FloatRect rect{m_sprite.getLocalBounds()};
+		
+		m_sizes = sf::Vector2f(rect.width, rect.height);
+	}
+		
+	void stretch()
+	{
+		m_mult = m_windims.y/(m_divis*m_sizes.y);
+		m_sprite.setScale(sf::Vector2f(m_mult, m_mult));				
+	}
+	
+	void set_posit()
+	{
+		m_sprite.setPosition(m_posit - 0.5f*m_mult*m_sizes);
+	}
+	
+	public:
+	
+	void displaying(sf::RenderWindow& window)
+	{
+		window.draw(m_sprite);
+	}
+	
+	botan(const sf::Vector2f& posit, const std::string& filename, const sf::Color& color,
+		  const sf::Vector2f& windims, const float divis)
+		: m_posit(posit), m_filename(filename), m_color(color),
+		  m_windims(windims), m_divis(divis), m_tex(), m_sprite()
+	{
+		load_tex();
+		set_tex();
+		set_color();
+		sprite_sizes();
+		stretch();
+		set_posit();
+	}
+	
+	~botan()
+	{
+	}
+	
+};
+
 class ground
 {
 	const sf::Vector2f m_windims{800.0f, 400.0f};
@@ -612,8 +692,8 @@ class square
 	{
 		bool walled{false};
 		
-		if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.15f*m_windims.x) ||
-			(m_shots[count].x_pout() - m_shots[count].r_pout() > 0.85f*m_windims.x))
+		if ((m_shots[count].x_pout() + m_shots[count].r_pout() < 0.0f*m_windims.x) ||
+			(m_shots[count].x_pout() - m_shots[count].r_pout() > 1.0f*m_windims.x))
 		{
 			walled = true;
 		}
@@ -751,10 +831,15 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	const sf::Color light_red{sf::Color(191, 63, 63)};
 	const sf::Color light_green{sf::Color(63, 191, 63)};
 	const sf::Color light_blue{sf::Color(63, 63, 191)};
+	const sf::Color light_orange{sf::Color(191, 127, 63)};
 	
-	const float divis{10.0f};	
+	const std::string filename{"194889.jpg"};
 	
-	sf::RenderWindow window(sf::VideoMode(windims.x, windims.y), program_name, sf::Style::Default);
+	const float divis{10.0f};
+	
+	const float h_factor{1.3f};
+	
+	sf::RenderWindow window(sf::VideoMode(windims.x, h_factor*windims.y), program_name, sf::Style::Default);
 			
 	while (window.isOpen())
 	{
@@ -763,6 +848,8 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 		square lefter(windims, wing::left, light_red);
 		square righter(windims, wing::right, light_blue);
 		ground earth(windims, divis, light_green);
+		
+		botan button(0.8f*windims, filename, light_orange, windims, 0.2f*divis);
 		
 		sf::Clock clock;
 		sf::Time time;
@@ -776,6 +863,8 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 			if (loop_mode == 0)
 			{
 				window.clear(black);
+				
+				button.displaying(window);
 				
 				earth.displaying(window);
 				lefter.displaying(window);
@@ -846,7 +935,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 
 int main()
 {
-	const std::string program_name{"Squaighter V0.8"};
+	const std::string program_name{"Squaighter V0.14"};
 	
 	std::cout << program_name << '\n';
 	
