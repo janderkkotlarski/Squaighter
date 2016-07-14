@@ -288,16 +288,29 @@ class punch
 	const float m_squide{1.0f};
 	sf::Vector2f m_posit;
 	
-	const sf::Vector2f m_speed;
+	const float m_steps{10.0f};
+	const float m_min_stretch{1.0f};
+	const float m_max_stretch{4.0f};
+	const float m_delta_stretch{(m_max_stretch - m_min_stretch)/m_steps};
+	float m_stretch{m_min_stretch};
 	
 	const float m_side{0.5f*m_squide};
-	const sf::Vector2f m_sides {m_side, m_side};
-	const sf::Vector2f m_radii{2.0f*m_side, 0.5f*m_side};
+	sf::Vector2f m_sides{m_side, m_side};
+	sf::Vector2f m_radii{0.5f*m_sides.x, 0.5f*m_sides.y};
 	
 	const sf::Color m_dark{63, 63, 63};
-	const sf::Color m_color;
+	const sf::Color m_color;	
 	
 	sf::RectangleShape m_rect;
+	
+	bool m_stretch_out{false};
+	bool m_stretch_in{false};
+	
+	void set_stretch()
+	{
+		m_sides = sf::Vector2f(m_stretch*m_side, m_side);
+		m_radii = sf::Vector2f(0.5f*m_sides.x, 0.5f*m_sides.y);
+	}
 	
 	void set_rect_posit()
 	{
@@ -311,7 +324,47 @@ class punch
 		m_rect.setFillColor(m_color);
 	}
 	
+	void stretch_out()
+	{
+		if (m_stretch_out)
+		{
+			m_stretch += m_delta_stretch;
+			
+			if (m_stretch > m_max_stretch - 0.5f*m_delta_stretch)
+			{
+				set_stretch();
+				m_stretch_out = false;
+				m_stretch_in = true;
+			}
+		}		
+	}
+	
+	void stretch_in()
+	{
+		if (m_stretch_in)
+		{
+			m_stretch -= m_delta_stretch;
+			
+			if (m_stretch < m_min_stretch + 0.5f*m_delta_stretch)
+			{
+				set_stretch();
+				m_stretch_in = false;
+			}
+		}		
+	}
+	
 	public:
+	
+	void stretching()
+	{
+		stretch_out();
+		stretch_in();
+	}
+	
+	void punch_out()
+	{
+		m_stretch_out = true;
+	}
 	
 	sf::Vector2f r_pout()
 	{
@@ -339,8 +392,8 @@ class punch
 		window.draw(m_rect);
 	}
 	
-	punch(const float squide, const sf::Vector2f& posit, const sf::Vector2f& speed, const sf::Color& color)
-		: m_squide(squide), m_posit(posit), m_speed(speed), m_side(0.5f*m_squide), m_sides(4.0f*m_side, m_side),
+	punch(const float squide, const sf::Vector2f& posit, const sf::Color& color)
+		: m_squide(squide), m_posit(posit), m_side(0.5f*m_squide), m_sides(m_side, m_side),
 		  m_radii(0.5f*m_sides.x, 0.5f*m_sides.y), m_color(color + m_dark), m_rect()
 	  {
 		  set_rect();
@@ -850,6 +903,17 @@ class square
 		}
 	}
 	
+	void punching()
+	{
+		if ((sf::Keyboard::isKeyPressed(sf::Keyboard::E) && (show_wing() == wing::left)) ||
+		   (sf::Keyboard::isKeyPressed(sf::Keyboard::O) && (show_wing() == wing::right)))
+		{			
+			m_punch.punch_out();
+		}
+		
+		m_punch.stretching();
+	}
+	
 	void shooting(square& another)
 	{
 		if ((sf::Keyboard::isKeyPressed(sf::Keyboard::R) && (show_wing() == wing::left)) ||
@@ -1000,6 +1064,8 @@ class square
 	void acting(ground& earth, square& another)
 	{
 		moving(earth, another);
+		punching();
+		
 		shooting(another);
 		shot_expire(another);
 	}
@@ -1011,8 +1077,8 @@ class square
 		  m_speed_right(m_speed_mult*m_windims.x, 0.0f), m_speed_left(-m_speed_mult*m_windims.x, 0.0f),
 		  m_jump_up(0.0f, -m_jump_mult*m_windims.y), m_accel(0.0f, m_accel_mult*m_windims.y),
 		  m_color(color), m_square(), m_health(m_side, m_posit),
-		  m_punch(m_side, m_posit, m_speed, m_color), m_shots(),
-		  m_chars(chars), m_chars_size(static_cast<int>(m_chars.size())), m_botans()
+		  m_punch(m_side, m_posit, m_color), m_shots(), m_chars(chars),
+		  m_chars_size(static_cast<int>(m_chars.size())), m_botans()
 	{
 		set_wing();
 		set_square();
