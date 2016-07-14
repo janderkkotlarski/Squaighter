@@ -26,12 +26,18 @@ sf::Keyboard::Key char_to_key(const char letter)
 	return keyn;
 }
 
+std::string key_naming(const char letter)
+{
+	const std::string setter{letter};
+	
+	return "Key_" + setter + ".png";
+}
+
 enum class wing {left, right};
 
 class botan
 {
-	const sf::Vector2f m_posit;
-	const std::string m_filename;
+	const sf::Vector2f m_posit;	
 	
 	sf::Color m_color;
 	const sf::Color m_bright;
@@ -42,7 +48,8 @@ class botan
 	
 	float m_mult{1.0f};
 	
-	const char m_letter;	
+	const char m_letter;
+	const std::string m_filename;	
 	sf::Keyboard::Key m_keyn;
 	
 	bool m_pressed{false};
@@ -114,11 +121,7 @@ class botan
 		window.draw(m_sprite);
 	}
 	
-	botan(const sf::Vector2f& posit, const std::string& filename, const sf::Color& color,
-		  const sf::Vector2f& windims, const float divis, const char letter)
-		: m_posit(posit), m_filename(filename), m_color(color), m_bright(m_color),
-		  m_windims(windims), m_divis(divis), m_letter(letter),
-		  m_keyn(char_to_key(m_letter)), m_tex(), m_sprite()
+	void set_botan()
 	{
 		load_tex();
 		set_tex();
@@ -126,6 +129,15 @@ class botan
 		sprite_sizes();
 		stretch();
 		set_posit();
+	}
+	
+	botan(const sf::Vector2f& posit, const sf::Color& color,
+		  const sf::Vector2f& windims, const float divis, const char letter)
+		: m_posit(posit), m_color(color), m_bright(m_color),
+		  m_windims(windims), m_divis(divis), m_letter(letter), m_filename(key_naming(m_letter)),
+		  m_keyn(char_to_key(m_letter)), m_tex(), m_sprite()
+	{
+		set_botan();
 	}
 	
 	~botan()
@@ -318,7 +330,7 @@ class shot
 	{
 		window.draw(m_square);
 	}
-	
+		
 	shot(const float squide, const sf::Vector2f& posit, const sf::Vector2f& speed, const sf::Color& color)
 		: m_squide(squide), m_posit(posit), m_speed(speed), m_side(0.25f*m_squide), m_sides(m_side, m_side),
 		  m_radius(0.5f*m_side), m_color(color + m_dark), m_square()
@@ -387,6 +399,10 @@ class square
 	
 	std::vector <shot> m_shots;
 	
+	std::string m_chars;
+	const int m_chars_size;
+	std::vector <botan> m_botans;
+	
 	bool dressing{false};
 	
 	float r_pout()
@@ -441,6 +457,48 @@ class square
 		m_square.setSize(m_sides);
 		set_square_posit();
 		m_square.setFillColor(m_color);
+	}
+	
+	void set_botans()
+	{
+		for (int count{0}; count < m_chars_size; ++count)
+		{
+			const sf::Vector2f char_posit{m_posit.x + (-0.5f + static_cast<float>(count))*m_side, m_posit.y + 3.0f*m_side};
+			// const sf::Vector2f char_posit{m_posit};
+			botan button(char_posit, m_color, m_windims, m_divis, m_chars[count]);
+			
+			m_botans.push_back(button);
+			// m_botans[count].set_botan();
+		}
+		
+		for (int count{0}; count < m_chars_size; ++count)
+		{
+			m_botans[count].set_botan();
+		}
+		
+		std::cout << m_chars_size << "\n";
+	}
+	
+	void pressing_botans()
+	{
+		if (static_cast<int>(m_botans.size()) == m_chars_size)
+		{
+			for (int count{0}; count < m_chars_size; ++count)
+			{				
+				m_botans[count].pressing();
+			}
+		}		
+	}
+	
+	void display_botans(sf::RenderWindow& window)
+	{
+		if (static_cast<int>(m_botans.size()) == m_chars_size)
+		{
+			for (int count{0}; count < m_chars_size; ++count)
+			{				
+				m_botans[count].displaying(window);
+			}
+		}		
 	}
 	
 	void horizon_check()
@@ -675,6 +733,7 @@ class square
 		move_shots();
 		deshocking();
 		m_health.set_posit(m_posit);
+		pressing_botans();
 	}
 	
 	void display_square(sf::RenderWindow& window)
@@ -835,7 +894,8 @@ class square
 	{
 		display_square(window);
 		m_health.displaying(window);
-		display_shots(window);	
+		display_shots(window);
+		display_botans(window);
 	}
 	
 	void acting(ground& earth, square& another)
@@ -845,16 +905,19 @@ class square
 		shot_expire(another);
 	}
 	
-	square(const sf::Vector2f& windims, const wing& winger, const sf::Color& color)
+	square(const sf::Vector2f& windims, const wing& winger, const sf::Color& color,
+			const std::string& chars)
 		: m_windims(windims), m_winger(winger), m_side(m_windims.y/m_divis),	
 		  m_radius(0.5f*m_side), m_sides(m_side, m_side),
 		  m_speed_right(m_speed_mult*m_windims.x, 0.0f), m_speed_left(-m_speed_mult*m_windims.x, 0.0f),
 		  m_jump_up(0.0f, -m_jump_mult*m_windims.y), m_accel(0.0f, m_accel_mult*m_windims.y),
-		  m_color(color), m_square(), m_health(m_side, m_posit), m_shots()
+		  m_color(color), m_square(), m_health(m_side, m_posit), m_shots(),
+		  m_chars(chars), m_chars_size(static_cast<int>(m_chars.size())), m_botans()
 	{
 		set_wing();
 		set_square();
 		m_health.set_posit(m_posit);
+		set_botans();
 	}
 	
 	~square()
@@ -875,7 +938,8 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	const sf::Color light_blue{sf::Color(63, 63, 191)};
 	const sf::Color light_orange{sf::Color(191, 127, 63)};
 	
-	
+	const std::string lefter_letters{'w', 'a', 's', 'd', 'r'};
+	const std::string righter_letters{'i', 'j', 'k', 'l', 'p'};
 	
 	const float divis{10.0f};
 	
@@ -892,13 +956,13 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	{
 		int loop_mode{0};
 		
-		square lefter(windims, wing::left, light_red);
-		square righter(windims, wing::right, light_blue);
+		square lefter(windims, wing::left, light_red, lefter_letters);
+		square righter(windims, wing::right, light_blue, righter_letters);
 		ground earth(windims, divis, light_green);
 		
 		const char letter_space{' '};
 		
-		botan button(space_posit, space_name, light_orange, windims, divis, letter_space);
+		botan button(space_posit, light_orange, windims, divis, letter_space);
 		
 		sf::Clock clock;
 		sf::Time time;
@@ -986,7 +1050,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 
 int main()
 {
-	const std::string program_name{"Squaighter V0.14"};
+	const std::string program_name{"Squaighter V0.15"};
 	
 	std::cout << program_name << '\n';
 	
