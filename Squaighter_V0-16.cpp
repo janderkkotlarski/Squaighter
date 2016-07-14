@@ -22,13 +22,22 @@ sf::Keyboard::Key char_to_key(const char letter)
 	{
 		keyn = static_cast<sf::Keyboard::Key>(57);
 	}
+	else if (letter == 27)
+	{
+		keyn = static_cast<sf::Keyboard::Key>(36);
+	}
 	
 	return keyn;
 }
 
 std::string key_naming(const char letter)
 {
-	const std::string setter{letter};
+	std::string setter{letter};
+	
+	if (letter == 27)
+	{
+		setter = "esc";
+	}
 	
 	return "Key_" + setter + ".png";
 }
@@ -334,10 +343,10 @@ class shot
 	shot(const float squide, const sf::Vector2f& posit, const sf::Vector2f& speed, const sf::Color& color)
 		: m_squide(squide), m_posit(posit), m_speed(speed), m_side(0.25f*m_squide), m_sides(m_side, m_side),
 		  m_radius(0.5f*m_side), m_color(color + m_dark), m_square()
-		  {
-			  set_square();
-		  }
-		  
+	  {
+		  set_square();
+	  }
+
 	~shot()
 	{
 	}
@@ -463,11 +472,21 @@ class square
 	{
 		for (int count{0}; count < m_chars_size; ++count)
 		{
-			sf::Vector2f char_posit{m_posit.x + (-0.5f + static_cast<float>(count))*m_side, m_posit.y + 3.0f*m_side};
+			sf::Vector2f char_posit{m_posit.x + 1.5f*(static_cast<float>(count - 1))*m_side, m_posit.y + 2.5f*m_side};
+			
+			if (count > 2)
+			{
+				char_posit += sf::Vector2f(-6.0f*m_side, 1.5f*m_side);
+			}
 			
 			if (m_winger == wing::left)
 			{
-				
+				char_posit += sf::Vector2f(3.0f*m_side, 0.0f);
+			}
+			
+			if (m_winger == wing::right)
+			{
+				char_posit += sf::Vector2f(-1.5f*m_side, 0.0f);
 			}
 				
 				
@@ -942,18 +961,22 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 	const sf::Color light_green{sf::Color(63, 191, 63)};
 	const sf::Color light_blue{sf::Color(63, 63, 191)};
 	const sf::Color light_orange{sf::Color(191, 127, 63)};
+	const sf::Color light_purple{sf::Color(191, 63, 191)};
+	const sf::Color light{sf::Color(191, 191, 191)};
 	
-	const std::string lefter_letters{'w', 'a', 's', 'd', 'r'};
-	const std::string righter_letters{'i', 'j', 'k', 'l', 'p'};
+	const std::string lefter_letters{'w', 'e', 'r', 'a', 's', 'd'};
+	const std::string righter_letters{'i', 'o', 'p', 'j', 'k', 'l'};
 	
 	const float divis{10.0f};
 	
 	const float block{windims.y/divis};
 	
-	const float h_factor{1.4f};
+	const float h_factor{1.35f};
 	
 	const std::string space_name{"Key_Space.png"};
-	const sf::Vector2f space_posit{10.0f*block, 13.0f*block};
+	const sf::Vector2f space_posit{10.0f*block, 12.5f*block};
+	
+	const sf::Vector2f escape_posit{10.0f*block, 11.0f*block};
 	
 	sf::RenderWindow window(sf::VideoMode(windims.x, h_factor*windims.y), program_name, sf::Style::Default);
 			
@@ -966,8 +989,10 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 		ground earth(windims, divis, light_green);
 		
 		const char letter_space{' '};
+		const char letter_escape{27};
 		
-		botan button(space_posit, light_orange, windims, divis, letter_space);
+		botan space_button(space_posit, light, windims, divis, letter_space);
+		botan escape_button(escape_posit, light, windims, divis, letter_escape);
 		
 		sf::Clock clock;
 		sf::Time time;
@@ -981,9 +1006,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 			if (loop_mode == 0)
 			{
 				window.clear(black);
-				
-				button.displaying(window);
-				
+						
 				earth.displaying(window);
 				lefter.displaying(window);
 				righter.displaying(window);
@@ -992,12 +1015,16 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 			if (loop_mode == -1)
 			{
 				window.clear(light_red);
+				space_button.displaying(window);
 			}
 			
 			if (loop_mode == 1)
 			{
 				window.clear(light_blue);
+				space_button.displaying(window);
 			}
+			
+			escape_button.displaying(window);
 			
 			time = clock.getElapsedTime();
 			
@@ -1022,9 +1049,10 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 				{
 					loop_mode = -1;
 				}
-				
-				button.pressing();
 			}
+			
+			space_button.pressing();
+			escape_button.pressing();
 			
 			if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space) &&
 				(loop_mode != 0))
@@ -1055,7 +1083,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 
 int main()
 {
-	const std::string program_name{"Squaighter V0.15"};
+	const std::string program_name{"Squaighter V0.16"};
 	
 	std::cout << program_name << '\n';
 	

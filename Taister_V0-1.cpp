@@ -11,11 +11,11 @@ int main()
 	
 	if (sf::Keyboard::KeyCount == keyn)
 	{
-		std::cout << sf::Keyboard::Space << " == " << keyn << "\n";
+		std::cout << sf::Keyboard::Escape << " == " << keyn << "\n";
 	}
 	else
 	{
-		std::cout << sf::Keyboard::Space << " != " << keyn << "\n";
+		std::cout << sf::Keyboard::Escape << " != " << keyn << "\n";
 	}
 	
 	const char letter{'z'};
