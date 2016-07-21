@@ -546,6 +546,103 @@ class square
 
     bool dressing{false};
 
+    bool m_key_left{false};
+    bool m_key_right{false};
+    bool m_key_jump{false};
+    bool m_key_warp{false};
+    bool m_key_punch{false};
+    bool m_key_shot{false};
+
+
+    void reset_keys()
+    {
+        m_key_left = false;
+        m_key_right = false;
+        m_key_jump = false;
+        m_key_warp = false;
+        m_key_punch = false;
+        m_key_shot = false;
+    }
+
+    void parse_left()
+    {
+        if (m_winger == wing::left)
+        {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::W))
+            {
+                m_key_jump = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::E))
+            {
+                m_key_punch = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::R))
+            {
+                m_key_shot = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::A))
+            {
+                m_key_left = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::S))
+            {
+                m_key_warp = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::D))
+            {
+                m_key_right = true;
+            }
+        }
+    }
+
+    void parse_right()
+    {
+        if (m_winger == wing::right)
+        {
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::I))
+            {
+                m_key_jump = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::O))
+            {
+                m_key_punch = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::P))
+            {
+                m_key_shot = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::J))
+            {
+                m_key_left = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::K))
+            {
+                m_key_warp = true;
+            }
+
+            if (sf::Keyboard::isKeyPressed(sf::Keyboard::L))
+            {
+                m_key_right = true;
+            }
+        }
+    }
+
+    void keying()
+    {
+        reset_keys();
+        parse_left();
+        parse_right();
+    }
+
     float r_pout()
     {
         return m_radius;
@@ -670,8 +767,7 @@ class square
 
     void move_right()
     {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::D) && (m_winger == wing::left)) ||
-            (sf::Keyboard::isKeyPressed(sf::Keyboard::L) && (m_winger == wing::right)))
+        if (m_key_right)
         {
             m_posit += m_speed_right;
         }
@@ -681,8 +777,7 @@ class square
 
     void move_left()
     {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::A) && (m_winger == wing::left)) ||
-            (sf::Keyboard::isKeyPressed(sf::Keyboard::J) && (m_winger == wing::right)))
+        if (m_key_left)
         {
             m_posit += m_speed_left;
         }
@@ -702,8 +797,7 @@ class square
 
     void jump_up()
     {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::W) && (m_winger == wing::left)) ||
-            (sf::Keyboard::isKeyPressed(sf::Keyboard::I) && (m_winger == wing::right)))
+        if (m_key_jump)
         {
             if (!pressing && (m_jumps > 0))
             {
@@ -734,8 +828,7 @@ class square
 
     void warp(square& another)
     {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::S) && (m_winger == wing::left)) ||
-            (sf::Keyboard::isKeyPressed(sf::Keyboard::K) && (m_winger == wing::right)))
+        if (m_key_warp)
         {
             if (!warping)
             {
@@ -914,20 +1007,17 @@ class square
 
     void punching()
     {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::E) && (show_wing() == wing::left)) ||
-           (sf::Keyboard::isKeyPressed(sf::Keyboard::O) && (show_wing() == wing::right)))
+        if (m_key_punch)
         {
             m_punch.punch_out();
         }
-
 
         m_punch.stretching();
     }
 
     void shooting(square& another)
     {
-        if ((sf::Keyboard::isKeyPressed(sf::Keyboard::R) && (show_wing() == wing::left)) ||
-            (sf::Keyboard::isKeyPressed(sf::Keyboard::P) && (show_wing() == wing::right)))
+        if (m_key_shot)
         {
             if (!dressing)
             {
@@ -1077,6 +1167,7 @@ class square
 
     void acting(ground& earth, square& another)
     {
+        keying();
         punching();
         moving(earth, another);
         shooting(another);
@@ -1242,7 +1333,7 @@ int window_maker(const sf::Vector2f& windims, const std::string& program_name)
 
 int main()
 {
-    const std::string program_name{"Squaighter V0.17"};
+    const std::string program_name{"Squaighter V0.18"};
 
     std::cout << program_name << '\n';
 

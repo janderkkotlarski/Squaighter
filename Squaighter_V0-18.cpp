@@ -561,7 +561,7 @@ class square
 		m_key_jump = false;
 		m_key_warp = false;
 		m_key_punch = false;
-		m_key_warp = false;		
+		m_key_shot = false;		
 	}
 	
 	void parse_left()
